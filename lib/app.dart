@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:matches/pages/main_page.dart';
 import 'package:matches/repositories/mapper/match_mapper.dart';
+import 'package:matches/repositories/matches_repository.dart';
 import 'package:matches/services/network/matches_service.dart';
 import 'package:provider/provider.dart';
 
@@ -9,15 +11,24 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MultiProvider(
+        providers: [
+          Provider<MatchMapper>(
+            create: (_) => MatchMapper(),
+          )
+        ],
+        child: MultiProvider(
           providers: [
-            Provider<MatchMapper>(
-              create: (_) => MatchMapper(),
+            Provider<MatchesService>(
+              create: (_) => MatchesService('v3.football.api-sports.io'),
             )
           ],
-          child: MultiProvider(
+          child: MultiRepositoryProvider(
             providers: [
-              Provider<MatchesService>(
-                create: (_) => MatchesService('v3.football.api-sports.io'),
+              RepositoryProvider<MatchesRepository>(
+                create: (context) => MatchesRepository(
+                  matchesService: context.read<MatchesService>(),
+                  matchMapper: context.read<MatchMapper>(),
+                ),
               )
             ],
             child: MaterialApp(
@@ -52,5 +63,7 @@ class App extends StatelessWidget {
               ),
               home: const MainPage(),
             ),
-          ));
+          ),
+        ),
+      );
 }
